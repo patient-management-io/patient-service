@@ -9,7 +9,6 @@ RUN mvn dependency:go-offline -B
 
 COPY src ./src
 
-# Package into jar
 RUN mvn clean package
 
 FROM openjdk:21-jdk AS runner

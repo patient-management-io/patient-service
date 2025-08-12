@@ -21,6 +21,12 @@ spring:
 #    init:
 #      mode: always
 
+billing:
+  service:
+    address: billing-service
+    grpc:
+      port: 9001
+
 server:
   port: 4000
 
