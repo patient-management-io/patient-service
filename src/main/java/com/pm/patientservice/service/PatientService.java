@@ -1,5 +1,6 @@
 package com.pm.patientservice.service;
 
+import com.pm.patientservice.dto.PagedPatientResponseDto;
 import com.pm.patientservice.dto.PatientRequestDto;
 import com.pm.patientservice.dto.PatientResponseDto;
 import com.pm.patientservice.exceptions.EmailAlreadyExistsException;
@@ -10,6 +11,10 @@ import com.pm.patientservice.mapper.PatientMapper;
 import com.pm.patientservice.model.Patient;
 import com.pm.patientservice.repository.PatientRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -24,9 +29,36 @@ public class PatientService {
     private final BillingServiceGrpcClient billingService;
     public final KafkaProducer eventProducer;
 
-    public List<PatientResponseDto> getPatients() {
-        List<Patient> patients = patientRepository.findAll();
-        return patients.stream().map(PatientMapper::toDto).toList();
+    public PagedPatientResponseDto getPatients(
+            int page,
+            int size,
+            String sort,
+            String sortField,
+            String searchValue
+    ) {
+        Pageable pageable = PageRequest.of(page - 1, size,
+                sort.equalsIgnoreCase("desc")
+                        ? Sort.by(sortField).descending()
+                        : Sort.by(sortField).ascending()
+        );
+
+        Page<Patient> patients;
+
+        if (searchValue == null || searchValue.isBlank()) {
+            patients = patientRepository.findAll(pageable);
+        } else {
+            patients = patientRepository.findByNameContainingIgnoreCase(searchValue, pageable);
+        }
+
+        List<PatientResponseDto> patientDtos = patients.getContent().stream().map(PatientMapper::toDto).toList();
+
+        return PagedPatientResponseDto.builder()
+                .patients(patientDtos)
+                .size(patients.getSize())
+                .page(patients.getNumber() + 1)
+                .totalPages(patients.getTotalPages())
+                .totalElements(patients.getNumberOfElements())
+                .build();
     }
 
     public PatientResponseDto createPatient(PatientRequestDto patientRequestDto) {
