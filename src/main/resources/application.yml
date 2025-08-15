@@ -7,28 +7,25 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.ByteArraySerializer
 
-#  h2:
-#    console:
-#      path: /h2-console
-#
-#  datasource:
-#    url: jdbc:h2:mem:testdb
-#    driver-class-name: org.h2.Driver
-#    username: admin
-#    password:
-#
-#  jpa:
-#    database-platform: org.hibernate.dialect.H2Dialect
-#    hibernate:
-#      ddl-auto: update
-#
-#  sql:
-#    init:
-#      mode: always
-
 server:
   port: 4000
 
 logging:
   level:
     root: info
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      billingService:
+        slidingWindowSize: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+  retry:
+    instances:
+      billingRetry:
+        max-attempts: 2
+        wait-duration: 500ms
