@@ -29,3 +29,15 @@ resilience4j:
       billingRetry:
         max-attempts: 2
         wait-duration: 500ms
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus, metrics, cache
+    prometheus:
+      access: unrestricted
+  prometheus:
+    metrics:
+      export:
+        enabled: true
